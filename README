@@ -1,12 +1,22 @@
-GetFile
+Proxy Workaround
 ------------------------------------------------------------------------------
 
-Scripts to get a file thru restrictive web proxies.
+A collection of CGI utilities to put on your web server and use over highly
+restrictive http-only web proxies to run commands like dig, finger, nmap, ping,
+tr and whois, download files and fetch web pages.
+
+Requirements
+------------------------------------------------------------------------------
+
+The CGI scripts require bashlib for CGI programming with the bash shell (see
+http://bashlib.sourceforge.net/), which is included for convenience.
 
 Authors
 ------------------------------------------------------------------------------
 
-George D. Sotirov <gsotirov@obs.bg>
+George D. Sotirov <gdsotirov@dir.bg>
+
+For bashlib see project page and source.
 
 Copyright
 ------------------------------------------------------------------------------
