@@ -9,7 +9,11 @@ Requirements
 ------------------------------------------------------------------------------
 
 The CGI scripts require bashlib for CGI programming with the bash shell (see
-http://bashlib.sourceforge.net/), which is included for convenience.
+http://bashlib.sourceforge.net/), which is included for convenience. The
+command mailsend is also used for sending mail over SMTP if SMTP host is
+configured instead of localhost (see [1]).
+
+[1] http://www.muquit.com/muquit/software/mailsend/mailsend.html
 
 Authors
 ------------------------------------------------------------------------------
