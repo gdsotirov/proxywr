@@ -1,0 +1,35 @@
+/* Download This! Application Styles
+ * Written by George D. Sotirov <gdsotirov@yahoo.com>
+ */
+
+* {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+}
+
+img {
+    border: none;
+}
+
+div[id=copyright], div[id=conformance] {
+    font-size: small;
+    text-align: center;
+}
+
+/* Pseudo classes */
+
+.align-right {
+    text-align: right;
+}
+.align-left {
+    text-align: left;
+}
+.align-center {
+    text-align: center;
+}
+.align-justify {
+    text-align: justify;
+}
