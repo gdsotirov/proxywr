@@ -1,9 +1,14 @@
 #!/bin/bash
 
+# Download This! Service CGI Script
+# Written by George D. Sotirov <gdsotirov@dir.bg>
+#
+
 . /usr/local/bin/bashlib
 
 URL=`param URL`
 EMAIL=`param Email`
+CACHE_ONLY=`param CacheOnly`
 
 echo "Content-type: text/html"
 echo
@@ -21,10 +26,12 @@ echo "<title>Download This! Status</title>"
 echo "</head>"
 echo
 echo "<body>"
-./dt_srvc $URL $EMAIL </dev/null >/dev/null 2>/dev/null &
+
+./dt_srvc $URL $EMAIL $CACHE_ONLY </dev/null >/tmp/dt.log 2>&1 &
+
 echo "<p>You URL '$URL' is submited for download. You will receive message"
 echo "about the satus of your download.</p>"
-echo "<p>EOF</p>"
 echo "</body>"
 echo
 echo "</html>"
+

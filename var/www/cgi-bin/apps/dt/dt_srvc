@@ -1,20 +1,16 @@
 #!/bin/bash
 
 # Download This! Service
-# Written by George D. Sotirov <gdsotirov@yahoo.com>
+# Written by George D. Sotirov <gdsotirov@dir.bg>
 #
 
-. dt.conf
-
-# Used commands
-BASENAME=/bin/basename
-DATE=/bin/date
-MAIL=/bin/mail
-MKDIR=/bin/mkdir
-MV=/bin/mv
-TAIL=/usr/bin/tail
-TOUCH=/bin/touch
-WGET=/usr/bin/wget
+if [ -e '/etc/dt.conf' ]; then
+  . /etc/dt.conf
+else
+  if [ -e 'dt.conf' ]; then
+    . dt.conf
+  fi
+fi
 
 # Function   : write_log
 # Description: Write a single line into the log file, manage log file size
@@ -22,10 +18,10 @@ WGET=/usr/bin/wget
 function write_log {
   if [ "x$LOG_FILE" != "x" ]; then
     if [ "x$MAX_LOG_LINES" != "x" ]; then
-      if [ $MAX_LOG_LINES > 0 ]; then
+      if [ $MAX_LOG_LINES -gt 0 ]; then
         local TAIL_LINES=$(($MAX_LOG_LINES - 1))
         $TAIL -$TAIL_LINES $LOG_FILE > $LOG_FILE.tmp 2>/dev/null
-        $MV $LOG_FILE.tmp $LOG_FILE >/dev/null 2>/dev/null
+        $MV $LOG_FILE.tmp $LOG_FILE >/dev/null 2>&1
       fi
     fi
   fi
@@ -45,15 +41,39 @@ function write_log {
   if [ "x$LOG_FILE" != "x" ]; then
     echo "$DATE_STR $LL \"$2\"" >> $LOG_FILE
   else
-    echo "$DATE_STR #LL $2"
+    echo "$DATE_STR $LL $2"
   fi
 
   return 0
 }
 
+function sendmail {
+  TO=$1
+  SUB=$2
+  BODY=$3
+  ATTACH=$4
+
+  if [ "x$ATTACH" != "x" ]; then
+    if [ "x$SMTP_HOST" == "xlocalhost" ]; then
+      ATTACH_OPTS="-a $ATTACH"
+    else
+      MIME_TYPE=`$FILE -ib $ATTACH | $AWK -F ';' '{ print $1; }'`
+      ATTACH_OPTS="-a '$ATTACH' -y '$MIME_TYPE'"
+    fi
+  else
+    ATTACH_OPTS=
+  fi
+
+  if [ "x$SMTP_HOST" == "xlocalhost" ]; then
+    $MAIL -r $FROM_ADDR -s "$SUB" $ATTACH_OPTS $TO <$BODY >/dev/null 2>&1
+  else
+    $MAILSEND -v -d $DOMAIN -smtp $SMTP_HOST -p $SMTP_PORT -f $FROM_ADDR -t $TO -sub "'$SUB'" $ATTACH_OPTS <$BODY >/tmp/mailsend.log 2>&1
+  fi
+}
+
 # Check date format
 #
-$DATE +"'$DATE_FORMAT'" >/dev/null 2>/dev/null
+$DATE +"'$DATE_FORMAT'" >/dev/null 2>&1
 if [ $? != 0 ]; then
   DATE_FORMAT='%Y-%m-%d %H:%M:%S %Z' # default
 fi
@@ -62,7 +82,7 @@ fi
 #
 if [ "x$LOG_FILE" != "x" ]; then
   if [ ! -e $LOG_FILE ]; then
-    $TOUCH $LOG_FILE >/dev/null 2>/dev/null
+    $TOUCH $LOG_FILE >/dev/null 2>&1
     if [ $? != 0 ]; then
       write_log warn "Can not write to the log file '$LOG_FILE'. Will use standard out instead"
       LOG_FILE=
@@ -77,6 +97,7 @@ fi
 # Input parameters
 URL=$1
 EMAIL=$2
+CACHE_ONLY=$3
 
 # Check input parameters
 if [ "x$URL" == "x" -o "x$EMAIL" == "x" ]; then
@@ -123,27 +144,29 @@ if [ "x$FILE_NAME" == "x" ]; then
   write_log err "The URL passed '$URL' does not refer to a file."
   exit 1
 fi
-TEMP_FILE=$TEMP_DIR/$FILE_NAME.part
-CACHE_FILE=$CACHE_DIR/$FILE_NAME
+TEMP_FILE="$TEMP_DIR/$FILE_NAME.part"
+CACHE_FILE="$CACHE_DIR/$FILE_NAME"
 if [ "x$LOG_FOR_EACH_FILE" == "xyes" ]; then
-  LOG_FILE_FILE=$CACHE_DIR/$FILE_NAME.log
+  LOG_FILE_FILE="$CACHE_DIR/$FILE_NAME.log"
 else
-  LOG_FILE_FILE=
+  LOG_FILE_FILE=""
 fi
-BODY_FILE=$TEMP_DIR/$FILE_NAME.body
+BODY_FILE="$TEMP_DIR/$FILE_NAME.body"
 
 # Download the file to a temporary location if not downloaded yet
 if [ ! -e $CACHE_FILE ]; then
+  write_log info "Starting download of file '$FILE_NAME' from '$URL'"
   if [ "x$LOG_FILE_FILE" != "x" ]; then
-    $WGET $URL -O $TEMP_FILE >>$LOG_FILE_FILE 2>>$LOG_FILE_FILE
+    $WGET $URL -O $TEMP_FILE >$LOG_FILE_FILE 2>&1
   else
-    $WGET $URL -O $TEMP_FILE >/dev/null 2>/dev/null
+    $WGET $URL -O $TEMP_FILE >/dev/null 2>&1
   fi
   DL_RES=$?
   if [ $DL_RES != 0 ]; then
     write_log err "Downloading of file '$FILE_NAME' from URL '$URL' failed"
   else
-    $MV $TEMP_FILE $CACHE_FILE >/dev/null 2>/dev/null
+    $MV $TEMP_FILE $CACHE_FILE >/dev/null 2>&1
+    write_log info "Downloading of file '$FILE_NAME' from URL '$URL' successful"
   fi
 else
   write_log info "File '$FILE_NAME' found in cache"
@@ -151,30 +174,52 @@ fi
 
 # Send status message
 if [ -e $CACHE_FILE ]; then
-  echo "Hello $EMAIL!" > $BODY_FILE
-  echo "" >> $BODY_FILE
-  echo -n "You have requested the download of '$FILE_NAME' " >> $BODY_FILE
-  echo -n "from this URL '$URL'. Your file was successfully " >> $BODY_FILE
-  echo -n "downloaded. Please, find you file as an attachment " >> $BODY_FILE
-  echo    "to this letter." >> $BODY_FILE
-  echo "" >> $BODY_FILE
-  echo "" >> $BODY_FILE
-  echo "Regards!" >> $BODY_FILE
-  echo $FROM_TITLE >> $BODY_FILE
-  $MAIL -r $FROM_ADDR -s "'$SUCCESS_SUBJECT'" -a $TEMP_FILE $EMAIL < $BODY_FILE >/dev/null 2>/dev/null
-  write_log info "File '$FILE_NAME' was send to '$EMAIL'"
+  if [ "x$CACHE_ONLY" == "xon" ]; then
+    write_log info "File '$FILE_NAME' was cached by the request of '$EMAIL'"
+    echo -e "Hello $EMAIL!\n" > $BODY_FILE
+    echo -e "\n" >> $BODY_FILE
+    echo -n "You have requested the download of '$FILE_NAME' " >> $BODY_FILE
+    echo -n "from this URL '$URL'. Your file was successfully " >> $BODY_FILE
+    echo -n "downloaded and cached. Please, find your file in " >> $BODY_FILE
+    echo -e "the server's Download This! cache dir.\n" >> $BODY_FILE
+    echo -e "\n" >> $BODY_FILE
+    echo -e "\n" >> $BODY_FILE
+    echo -e "Regards!\n" >> $BODY_FILE
+    echo -e "$FROM_TITLE\n" >> $BODY_FILE
+    sendmail $EMAIL "$CACHE_SUBJECT" $BODY_FILE ""
+    if [ $? == 0 ]; then
+      write_log info "'$EMAIL' was notified about the successful download and cache of file '$FILE_NAME'"
+    fi
+  else
+    echo -e "Hello $EMAIL!\n" > $BODY_FILE
+    echo -e "\n" >> $BODY_FILE
+    echo -n "You have requested the download of '$FILE_NAME' " >> $BODY_FILE
+    echo -n "from this URL '$URL'. Your file was successfully " >> $BODY_FILE
+    echo -n "downloaded. Please, find you file as an attachment " >> $BODY_FILE
+    echo -e "to this letter.\n" >> $BODY_FILE
+    echo -e "\n" >> $BODY_FILE
+    echo -e "\n" >> $BODY_FILE
+    echo -e "Regards!\n" >> $BODY_FILE
+    echo -e "$FROM_TITLE\n" >> $BODY_FILE
+    sendmail $EMAIL "$SUCCESS_SUBJECT" $BODY_FILE $CACHE_FILE
+    if [ $? == 0 ]; then
+      write_log info "File '$FILE_NAME' was send to '$EMAIL'"
+    fi
+  fi
 else
-  echo "Hello $EMAIL!" > $BODY_FILE
-  echo "" >> $BODY_FILE
+  echo -e "Hello $EMAIL!\n" > $BODY_FILE
+  echo -e "\n" >> $BODY_FILE
   echo -n "You have requested the download of '$FILE_NAME' " >> $BODY_FILE
   echo -n "from this URL '$URL'. Sorry, but there was error " >> $BODY_FILE
-  echo    "downloading this file." >> $BODY_FILE
-  echo "" >> $BODY_FILE
-  echo "" >> $BODY_FILE
-  echo "Regards!" >> $BODY_FILE
-  echo $FROM_TITLE >> $BODY_FILE
-  $MAIL -r $FROM_ADDR -s "'$FAILURE_SUBJECT'" < $BODY_FILE >/dev/null 2>/dev/null
-  write_log info "'$EMAIL' was notified about the unsuccessful download of file '$FILE_NAME' from '$URL'"
+  echo -e "downloading this file.\n" >> $BODY_FILE
+  echo -e "\n" >> $BODY_FILE
+  echo -e "\n" >> $BODY_FILE
+  echo -e "Regards!\n" >> $BODY_FILE
+  echo -e "$FROM_TITLE\n" >> $BODY_FILE
+  sendmail $EMAIL "$SUCCESS_SUBJECT" $BODY_FILE $LOG_FILE_FILE
+  if [ $? == 0 ]; then
+    write_log info "'$EMAIL' was notified about the unsuccessful download of file '$FILE_NAME' from '$URL'"
+  fi
 fi
 
 # Clean up
