@@ -1,0 +1,5 @@
+AuthType     Basic
+AuthName     "System utilities"
+AuthUserFile /etc/httpd/passwd
+Require      valid-user
+

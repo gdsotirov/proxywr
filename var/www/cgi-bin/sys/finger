@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#
+# Web access to whois command
+#
+
+. /usr/local/bin/bashlib
+
+ADDR=`param addr`
+CMD=/usr/bin/finger
+CMD_OPTNS=-l
+
+echo "Content-type: text/html"
+echo
+
+if [ "x$ADDR" == "x" ]; then
+  echo "Error: Nothing to process."
+  exit
+fi
+
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+echo
+echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD// XHTML 1.0 Strict//EN\""
+echo "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+echo
+echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+echo
+echo "<head>"
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+echo "<title>Finger</title>"
+echo "</head>"
+echo
+echo "<body>"
+echo "<h3>Getting information for user '${ADDR}'...</h3>"
+echo "<p><pre style=\"font: monospace;\">"
+
+$CMD $CMD_OPTNS $ADDR
+
+echo "</pre></p>"
+echo "<p>EOF</p>"
+echo "</body>"
+echo
+echo "</html>"
+

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+#
+# Web access to traceroute command
+#
+
+. /usr/local/bin/bashlib
+
+HOST=`param host`
+CMD=/usr/bin/traceroute
+
+echo "Content-type: text/html"
+echo
+
+if [ "x$HOST" == "x" ]; then
+  echo "Error: Nothing to process."
+  exit
+fi
+
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+echo
+echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD// XHTML 1.0 Strict//EN\""
+echo "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+echo
+echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+echo
+echo "<head>"
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+echo "<title>Traceroute</title>"
+echo "</head>"
+echo
+echo "<body>"
+echo "<h3>Tracing route to host '${HOST}'...</h3>"
+echo "<p><pre style=\"font: monospace;\">"
+
+$CMD $HOST 2>&1
+
+echo "</pre></p>"
+echo "<p>EOF</p>"
+echo "</body>"
+echo
+echo "</html>"
+

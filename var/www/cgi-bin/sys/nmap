@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#
+# Web access to nmap command
+#
+
+. /usr/local/bin/bashlib
+
+HOST=`param host`
+PORT=`param port`
+CMD=/usr/bin/nmap
+
+echo "Content-type: text/html"
+echo
+
+if [ "x$HOST" == "x" ]; then
+  echo "Error: Nothing to process."
+  exit
+fi
+
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+echo
+echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD// XHTML 1.0 Strict//EN\""
+echo "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+echo
+echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+echo
+echo "<head>"
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+echo "<title>Nmap</title>"
+echo "</head>"
+echo
+echo "<body>"
+echo "<h3>Scanning ports of host '${HOST}'...</h3>"
+echo "<p><pre style=\"font: monospace;\">"
+
+if [ "x$PORT" -ne "x" ]; then
+  $CMD -p $PORT $HOST
+else
+  $CMD $HOST
+fi
+
+echo "</pre></p>"
+echo "<p>EOF</p>"
+echo "</body>"
+echo
+echo "</html>"
+

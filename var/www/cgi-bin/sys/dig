@@ -1,0 +1,54 @@
+#!/bin/bash
+
+#
+# Web access to dig command
+#
+
+. /usr/local/bin/bashlib
+
+HOST=`param host`
+RECORD=`param rec`
+ATDNS=`param dns`
+CMD=/usr/bin/dig
+CMD_OPTNS=
+
+echo "Content-type: text/html"
+echo
+
+if [ "x$HOST" == "x" ]; then
+  echo "Error: Nothing to process."
+  exit
+fi
+
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+echo
+echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD// XHTML 1.0 Strict//EN\""
+echo "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+echo
+echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+echo
+echo "<head>"
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+echo "<title>Dig</title>"
+echo "</head>"
+echo
+echo "<body>"
+if [ "x$RECORD" != "x" ]; then
+  echo "<h3>Domain Name Service query for '${HOST}' about '${RECORD}' record...</h3>"
+else
+  echo "<h3>Domain Name Service query for '${HOST}'...</h3>"
+fi
+echo "<p><pre style=\"font: monospace;\">"
+
+if [ "x$RECORD" != "x" ]; then
+  $CMD $CMD_OPTNS $HOST $RECORD
+else
+  $CMD $CMD_OPTNS $HOST
+fi
+
+echo "</pre></p>"
+echo "<p>EOF</p>"
+echo "</body>"
+echo
+echo "</html>"
+

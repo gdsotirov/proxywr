@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Fetch Service CGI Script
+# Written by George D. Sotirov <gdsotirov@dir.bg>
+#
+
+. /usr/local/bin/bashlib
+
+URL=`param URL`
+
+# Binaries
+BASENAME=/usr/bin/basename
+CURL=/usr/bin/curl
+GREP=/usr/bin/grep
+
+echo "Content-type: text/html"
+echo
+
+if [ "x$URL" != "x" ]; then
+  HTTP_TEST=`echo $URL | $GREP -E '^https?:\/\/.+' - 2>/dev/null`
+  FTP_TEST=`echo $URL | $GREP -E '^ftps?:\/\/.+' - 2>/dev/null`
+  if [ "x$HTTP_TEST" != "x" -o "x$FTP_TEST" != "x" ]; then
+    $CURL ""$URL"" 2>/dev/null
+    if [ $? != 0 ]; then
+      echo "Error: Error while fetching URL '$URL'"
+    fi
+  else
+    echo -n "Error: Malformed URL '$URL'! You have to supply URL of type "
+    echo -n "&lt;protocol&gt;://&lt;host&gt;/&lt;path&gt;, where protocol "
+    echo    "can be one of http or https, e.g. http://www.google.com"
+  fi
+else
+  echo "Info: Nothing to process!"
+fi
+
+exit 0
+

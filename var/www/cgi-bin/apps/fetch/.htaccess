@@ -1,0 +1,11 @@
+AuthType     Basic
+AuthName     "Fetch Application"
+AuthUserFile /etc/httpd/passwd
+Require      valid-user
+Order        deny,allow
+Allow from   localhost 192.168.79. 192.168.19.
+Deny from    all
+
+<IfDefine SSL>
+  SSLRequireSSL
+</IfDefine>

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+. /usr/local/bin/bashlib
+
+URL=`param URL`
+EMAIL=`param Email`
+
+echo "Content-type: text/html"
+echo
+
+echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+echo
+echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD// XHTML 1.0 Strict//EN\""
+echo "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+echo
+echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">"
+echo
+echo "<head>"
+echo "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
+echo "<title>Download This! Status</title>"
+echo "</head>"
+echo
+echo "<body>"
+./dt_srvc $URL $EMAIL </dev/null >/dev/null 2>/dev/null &
+echo "<p>You URL '$URL' is submited for download. You will receive message"
+echo "about the satus of your download.</p>"
+echo "<p>EOF</p>"
+echo "</body>"
+echo
+echo "</html>"
