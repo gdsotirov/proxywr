@@ -57,8 +57,7 @@
     }
 
     // Check if the URL is valid or not
-    $WGET_CMD .= " --spider " . $URL;
-    system($WGET_CMD, $WGET_RETURN);
+    system("$WGET_CMD --spider $URL", $WGET_RETURN);
     if ( $WGET_RETURN) {
       print_error(URL_NOT_VALID, $URL);
       exit(URL_NOT_VALID);
@@ -66,6 +65,33 @@
 
     // Request file download
     print_error(PROCESSING_REQUEST, $URL);
+
+    $File = basename($URL);
+    system("$WGET_CMD --output-document=/tmp/$File $URL", $WGET_RETURN);
+
+    if ( isset($_GET['Email']) ) {
+      $Email = $_GET['Email'];
+
+      if ( $WGET_RETURN ) {
+        mail($Email,
+            "GetFile: Problem getting $File",
+            "Hello $Email,\n\nSorry. There was a problem getting file '$File'.\n\nRegards");
+      }
+      else {
+        if ( isset($_GET['Feedback']) && $_GET['Feedback'] == 'Send' ) {
+          // TODO: How to attach file?
+          mail($Email,
+          "GetFile: Your file $File",
+          "Hello $Email,\n\nPlease, find attached the '$File' your requested.\n\nRegards");
+        }
+        else {
+          mail($Email,
+              "GetFile: $File retrieved",
+              "Hello $Email,\n\nThe file '$File' was downloaded for you.\n\nRegards");
+        }
+      }
+    }
+
     exit(0);
   }
 
