@@ -9,7 +9,7 @@
 #!/bin/bash
 
 # Uncomment the following line to enable debug
-set -x
+#set -x
 
 # Defaults
 TMP_DIR_DFLT=/tmp
