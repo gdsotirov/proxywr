@@ -1,0 +1,131 @@
+<?php
+  // Constants
+  define("URL_NOT_VALID", 101);
+  define("INTERNAL_SCRIPT_ERROR", 102);
+  define("PROCESSING_REQUEST", 201);
+
+  $ERROR_MSGS = array(101 => "The URL '%s' is not valid or not available at the moment!",
+                      102 => "Internal script error!",
+                      201 => "The URL '%s' was submitted. You will be notified on the result.");
+
+  // Functions
+  function print_remote() {
+    echo $_SERVER['REMOTE_ADDR'] . " (" . gethostbyaddr($_SERVER["REMOTE_ADDR"]) . ")";
+  }
+
+  // TODO: Rewrite this function and use file templates to print
+  //       error messages in HTML.
+  function error_page($err_code, $err_msg) {
+    if ( $err_code > 100 && $err_code < 200 ) {
+      printf("Error %d: %s\n", $err_code, $err_msg);
+    }
+    else {
+      printf("Information: %s\n", $err_msg);
+    }
+  }
+
+  function print_error($err_code) {
+    global $ERROR_MSGS;
+    $args = '';
+    $numargs = func_num_args();
+    if ( $numargs > 1 ) {
+      $arg_list = func_get_args();
+      for ( $i = 1; $i < $numargs; $i++ ) {
+        if ( $i + 1 == $numargs ) {
+          $args .= $arg_list[$i];
+        }
+        else {
+          $args .= $arg_list[$i] .', ';
+        }
+      }
+    }
+
+    $err_msg = $ERROR_MSGS[$err_code];
+    $err_str = sprintf($err_msg, $args);
+    error_page($err_code, $err_str);
+  }
+
+  if ( isset($_GET['URL']) ) {
+    $URL = $_GET['URL'];
+    // Determine the wget command
+    $WGET_NAME = 'wget';
+    $WHICH_CMD = "which $WGET_NAME";
+    $WGET_CMD = system($WHICH_CMD, $WHICH_RETURN);
+    if ( $WHICH_RETURN ) {
+      print_error(INTERNAL_SCRIPT_ERROR);
+      exit(INTERNAL_SCRIPT_ERROR);
+    }
+
+    // Check if the URL is valid or not
+    $WGET_CMD .= " --spider " . $URL;
+    system($WGET_CMD, $WGET_RETURN);
+    if ( $WGET_RETURN) {
+      print_error(URL_NOT_VALID, $URL);
+      exit(URL_NOT_VALID);
+    }
+
+    // Request file download
+    print_error(PROCESSING_REQUEST, $URL);
+    exit(0);
+  }
+
+  print("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
+?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+<meta http-equiv="Content-Type" content="test/html; charset=UTF-8" />
+<meta name="author" content="Georgi D. Sotirov" />
+<meta name="description" content="GetFile Requester" />
+<title>GetFile Requester</title>
+<style type="text/css">
+input[type=text] {
+  color: black;
+  background-color: white;
+}
+</style>
+</head>
+
+<body>
+<h1>GetFile Requester</h1>
+
+<p>
+<form action="<?php echo $_SERVER['PHP_SELF'] ?>" name="GetFileRequesterForm">
+<label>Remote host:&nbsp;<?php print_remote() ?></label>
+<br /><br />
+<label for="URL">URL:&nbsp;
+<input id="URL" maxlength="4098" name="URL" type="text" size="64" /></label>
+<br /><br />
+<label for="Email">Email:&nbsp;
+<input id="Email" maxlength="128" name="Email" type="text" size="32" /></label>
+<br /><br />
+<fieldset>
+<legend>Feedback</legend>
+<label for="Notify">
+<input id="Notify" name="Feedback" type="radio" checked="checked"
+value="Notify"/>&nbsp;Just notify me on the given email (recommended)</label>
+<br />
+<label for="Send"><input id="Send" name="Feedback" type="radio" value="Send"
+/>&nbsp;Try to send the file to the given email (not guaranteed to work if the
+file is larger than 1MB)</label>
+</fieldset>
+<br /><br />
+<input id="Submit" name="Submit" type="submit" value="Submit" />
+<br /><br />
+</form></p>
+
+<hr />
+
+<p>
+Copyright 2004 George D. Sotirov
+&lt;<a href="mailto:gsotirov@obs.bg">gsotirov@obs.bg</a>&gt;<br />
+All right reserved
+</p>
+
+</body>
+
+</html>
