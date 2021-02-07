@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Download This! Service CGI Script
-# Written by George D. Sotirov <gdsotirov@dir.bg>
+# Written by George D. Sotirov <gdsotirov@gmail.com>
 #
 
 . /usr/local/bin/bashlib

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Download This! Service
-# Written by George D. Sotirov <gdsotirov@dir.bg>
+# Written by George D. Sotirov <gdsotirov@gmail.com>
 #
 
 if [ -e '/etc/dt.conf' ]; then
